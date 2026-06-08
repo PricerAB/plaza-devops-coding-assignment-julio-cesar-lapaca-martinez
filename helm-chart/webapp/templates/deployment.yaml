@@ -27,6 +27,9 @@ spec:
             - name: http
               containerPort: 8000
               protocol: TCP
+          env:
+            - name: HELLO_WORLD_MESSAGE
+              value: {{ .Values.helloWorldMessage | quote }}
           livenessProbe:
             httpGet:
               path: /

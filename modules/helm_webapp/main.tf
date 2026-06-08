@@ -1,10 +1,21 @@
 resource "helm_release" "webapp" {
-  name             = "webapp"
+  name             = var.helm_release_name
+  chart            = "${path.module}/../../helm-chart/webapp"
+  namespace        = var.namespace
   create_namespace = true
 
-  # Use local path to chart
+  set {
+    name  = "image.repository"
+    value = var.image_repository
+  }
 
-  # Use the variable namespace for the release
-  
-  # Set the chart values by reading variables input from services/variables.tf
+  set {
+    name  = "image.tag"
+    value = var.image_tag
+  }
+
+  set {
+    name  = "helloWorldMessage"
+    value = var.hello_world_message
+  }
 }
