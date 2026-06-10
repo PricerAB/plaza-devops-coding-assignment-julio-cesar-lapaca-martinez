@@ -3,3 +3,4 @@
 *.tfstate.backup
 *.pyc
 __pycache__/
+webapp/env/
