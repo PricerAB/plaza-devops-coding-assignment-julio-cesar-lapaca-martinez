@@ -4,18 +4,13 @@ resource "helm_release" "webapp" {
   namespace        = var.namespace
   create_namespace = true
 
-  set {
-    name  = "image.repository"
-    value = var.image_repository
-  }
-
-  set {
-    name  = "image.tag"
-    value = var.image_tag
-  }
-
-  set {
-    name  = "helloWorldMessage"
-    value = var.hello_world_message
-  }
+  values = [
+    yamlencode({
+      image = {
+        repository = var.image_repository
+        tag        = var.image_tag
+      }
+      helloWorldMessage = var.hello_world_message
+    })
+  ]
 }
