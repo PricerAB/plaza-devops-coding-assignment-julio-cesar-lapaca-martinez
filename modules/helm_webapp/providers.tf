@@ -1,6 +1,9 @@
-# You don't need to change this file
-provider "helm" {
-  kubernetes = {
-    # use default KUBE_CONFIG_PATH
+terraform {
+  required_providers {
+    helm = {
+      source  = "hashicorp/helm"
+      version = ">= 2.9.0"
+    }
   }
+  required_version = ">= 1.0.0"
 }

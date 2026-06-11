@@ -1,9 +1,7 @@
 name: CI/CD Pipeline
-
 on:
   pull_request_review:
     types: [submitted]
-
 env:
   PROJECT_ID: code-assignment-10
   CLUSTER_NAME: plaza-devops-gke
@@ -11,7 +9,6 @@ env:
   WORKLOAD_IDENTITY_PROVIDER: projects/365047560923/locations/global/workloadIdentityPools/pricer-github-pool/providers/github-actions
   SERVICE_ACCOUNT: coding-assignment-sa@code-assignment-10.iam.gserviceaccount.com
   USE_GKE_GCLOUD_AUTH_PLUGIN: True
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -19,7 +16,6 @@ jobs:
     permissions:
       contents: "read"
       id-token: "write"
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -37,12 +33,15 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
-      
+          python-version: '3.12'
+
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
 
-      # TODO: Add step(s) to run tests here
+      - name: Run tests
+        run: |
+          pip install -r webapp/requirements.txt
+          pytest webapp/tests/ -v
 
       - name: Setup Workload Identity Federation
         id: auth
@@ -60,7 +59,12 @@ jobs:
         run: |
           gcloud auth configure-docker -q europe-north1-docker.pkg.dev
 
-      # TODO: Add step(s) to build the docker image and push it to the container registry here
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ env.image_repository }}:${{ github.sha }} -t ${{ env.image_repository }}:latest ./webapp
+          docker push ${{ env.image_repository }}:${{ github.sha }}
+          docker push ${{ env.image_repository }}:latest
+          echo "TF_VAR_image_tag=${{ github.sha }}" >> $GITHUB_ENV
 
       - name: Configure GKE cluster access
         uses: google-github-actions/get-gke-credentials@v2
@@ -69,4 +73,8 @@ jobs:
           location: ${{ env.CLUSTER_LOCATION }}
           cluster_name: ${{ env.CLUSTER_NAME }}
 
-      # TODO: Add step(s) to install/upgrade the application by terraform in the Kubernetes cluster here
+      - name: Deploy with Terraform
+        run: |
+          cd services
+          terraform init
+          terraform apply -auto-approve
